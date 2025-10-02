@@ -1,0 +1,45 @@
+-- AdGuiClient (LocalScript)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local REQUEST_SHOW_AD = ReplicatedStorage:WaitForChild("RequestShowAd")
+local AD_COMPLETED = ReplicatedStorage:WaitForChild("AdCompleted")
+local TO_CLIENT = ReplicatedStorage:WaitForChild("AdResultToClient")
+
+-- GUI simple
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0,160,0,40)
+btn.Position = UDim2.new(0,20,0,20)
+btn.Text = "Ver anuncio - 30m"
+btn.Parent = screenGui
+
+btn.MouseButton1Click:Connect(function()
+    -- Pedimos al servidor iniciar el ad (opt-in)
+    REQUEST_SHOW_AD:FireServer()
+    btn.Text = "Cargando ad..."
+    btn.Active = false
+end)
+
+-- Respuestas del servidor
+TO_CLIENT.OnClientEvent:Connect(function(cmd, info)
+    if cmd == "startAd" then
+        -- Aquí en producción debes abrir la UI oficial de ads (API de rewarded video)
+        -- Para pruebas: mostramos un diálogo y simulamos completado
+        local confirmed = true -- simular que usuario vio el anuncio en pruebas
+        if confirmed then
+            -- Notificar al servidor que el ad terminó (solo para pruebas/local)
+            AD_COMPLETED:FireServer("simulated")
+        end
+    elseif cmd == "granted" then
+        local duration = info or 1800
+        btn.Text = "Acceso concedido (" .. tostring(math.floor(duration/60)) .. " min)"
+        wait(3)
+        btn.Text = "Ver anuncio - 30m"
+        btn.Active = true
+    elseif cmd == "denied" then
+        btn.Text = "Necesitas ver anuncio"
+        btn.Active = true
+    end
+end)
