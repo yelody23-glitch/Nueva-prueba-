@@ -1,0 +1,49 @@
+-- Servicios
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Variables
+local savedPosition = nil
+local noclip = false
+
+-- Función para activar/desactivar noclip (atravesar paredes)
+game:GetService("RunService").Stepped:Connect(function()
+	if noclip and character then
+		for _, part in pairs(character:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+	end
+end)
+
+-- Detectar teclas
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	
+	-- Guardar posición (TP1 con tecla "P")
+	if input.KeyCode == Enum.KeyCode.P then
+		savedPosition = humanoidRootPart.Position
+		print("📌 Posición guardada")
+	end
+	
+	-- Teletransportarse a la posición guardada (TP2 con tecla "O")
+	if input.KeyCode == Enum.KeyCode.O then
+		if savedPosition then
+			humanoidRootPart.CFrame = CFrame.new(savedPosition)
+			print("✨ Teletransportado")
+		else
+			print("⚠️ No hay posición guardada")
+		end
+	end
+	
+	-- Activar/Desactivar atravesar paredes (Tras con tecla "T")
+	if input.KeyCode == Enum.KeyCode.T then
+		noclip = not noclip
+		print("🚪 Noclip: " .. tostring(noclip))
+	end
+end)
